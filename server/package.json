@@ -1,0 +1,11 @@
+{
+  "name": "karaoke-queue-server",
+  "version": "0.1.0",
+  "description": "Server for karaoke queueing chrome extension",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daniel Dangond",
+  "license": "ISC"
+}
