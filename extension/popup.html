@@ -7,10 +7,16 @@
     <script src="utils.js"></script>
   </head>
   <body>
-    <button id="nextSong" type="button">Next Song</button>
-    <p>Choose a room code.</p>
-    <input id="roomCode" type="text"/>
-    <button id="joinRoom" type="button">Create Room</button>
+    <div id="connectedDiv" hidden>
+      <p>You have connected to room: <span id="connectedRoom"></span></p>
+      <button id="nextSong" type="button">Next Song</button>
+      <button id="leaveRoom" type="button">Leave Room</button>
+    </div>
+    <div id="unconnectedDiv">
+      <p>Choose a room code.</p>
+      <input id="roomCode" type="text"/>
+      <button id="joinRoom" type="button">Create Room</button>
+    </div>
     <script src="popup.js"></script>
   </body>
 </html>

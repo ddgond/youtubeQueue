@@ -25,10 +25,17 @@ chrome.runtime.onInstalled.addListener(() => {
 
 let socket;
 
-chrome.storage.sync.get('serverUrl', (data) => {
-  socket = io(data.serverUrl);
+const connectToSocketServer = (url) => {
+  chrome.storage.sync.set({
+    hostRoomCode:null
+  });
+  if (socket) {
+    socket.disconnect();
+  }
+  console.log("attempting connection");
+  socket = io(url);
   socket.on("connect", () => {
-    console.log(`connected to ${data.serverUrl}`);
+    console.log(`connected to ${url}`);
   });
   socket.on("playNextSong", (songUrl) => {
     console.log(`Playing song ${songUrl}`);
@@ -47,6 +54,16 @@ chrome.storage.sync.get('serverUrl', (data) => {
       }
     });
   });
+}
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (changes.serverUrl) {
+    connectToSocketServer(changes.serverUrl.newValue);
+  }
+});
+
+chrome.storage.sync.get('serverUrl', (data) => {
+  connectToSocketServer(data.serverUrl);
 })
 
 chrome.runtime.onConnect.addListener(port => {
@@ -54,6 +71,9 @@ chrome.runtime.onConnect.addListener(port => {
     if (port.name === "toServer") {
       if (msg.roomCode) {
         socket.emit("joinRoom", msg.roomCode);
+      }
+      if (msg.leaveRoom) {
+        socket.emit("leaveRoom");
       }
       if (msg.getNextSong) {
         socket.emit("getNextSong");

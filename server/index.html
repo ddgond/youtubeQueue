@@ -3,19 +3,32 @@
     <script src="/socket.io/socket.io.js"></script>
   </head>
   <body>
-    <p>Enter a room code.</p>
-    <input id="roomCodeInput" type="text"/>
-    <button id="joinRoomButton" type="button">Join Room</button>
-    <p>Currently playing: <span id="currentlyPlaying"></span></p>
-    <p id="state" style="display: inline-block"></p>
-    <p id="progress" style="display: inline-block"></p>
-    <button id="ad" type="button" hidden>Skip Ad</button>
-    <p>Enter a youtube video.</p>
-    <input id="videoInput" type="text"/>
-    <button id="submitVideoButton" type="button">Submit video</button>
+    <div id="unconnectedDiv">
+      <p>Enter a room code.</p>
+      <input id="roomCodeInput" type="text"/>
+      <button id="joinRoomButton" type="button">Join Room</button>
+    </div>
+    <div id="connectedDiv" hidden>
+      <p>You have connected to room: <span id="connectedRoom"></span></p>
+      <button id="leaveRoomButton" type="button">Leave Room</button>
+      <p>Currently playing: <span id="currentlyPlaying"></span></p>
+      <p id="state" style="display: inline-block"></p>
+      <p id="progress" style="display: inline-block"></p>
+      <button id="ad" type="button" hidden>Skip Ad</button>
+      <p>Search for a youtube video.</p>
+      <input id="searchInput" type="text"/>
+      <button id="submitSearchButton" type="button">Search</button>
 
-    <p>Queued Videos</p>
-    <div id="videoQueue"></div>
+      <div id="searchResultsParent">
+        <h3>Search Results</h3>
+        <div id="searchResults"></div>
+      </div>
+
+      <div id="videoQueueParent">
+        <h3>Queued Videos</h3>
+        <div id="videoQueue"></div>
+      </div>
+    </div>
 
     <script src="/js/index.js"></script>
   </body>
