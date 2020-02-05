@@ -1,4 +1,4 @@
-const defaultServerUrl = "http://www.example.com";
+const defaultServerUrl = "http://localhost:3000";
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({serverUrl: defaultServerUrl}, () => {
@@ -20,5 +20,47 @@ chrome.runtime.onInstalled.addListener(() => {
         ]
       }
     ]);
+  });
+});
+
+let socket;
+
+chrome.storage.sync.get('serverUrl', (data) => {
+  socket = io(data.serverUrl);
+  socket.on("connect", () => {
+    console.log(`connected to ${data.serverUrl}`);
+  });
+  socket.on("playNextSong", (songUrl) => {
+    console.log(`Playing song ${songUrl}`);
+    chrome.tabs.query({url: "*://*.youtube.com/*"}, (tabs) => {
+      if (tabs.length > 0) {
+        const port = chrome.tabs.connect(tabs[0].id, {name:"fromServer"});
+        port.postMessage({songUrl: songUrl});
+      }
+    });
+  });
+  socket.on("skipAd", () => {
+    chrome.tabs.query({url: "*://*.youtube.com/*"}, (tabs) => {
+      if (tabs.length > 0) {
+        const port = chrome.tabs.connect(tabs[0].id, {name:"fromServer"});
+        port.postMessage({skipAd: true});
+      }
+    });
+  });
+})
+
+chrome.runtime.onConnect.addListener(port => {
+  port.onMessage.addListener(msg => {
+    if (port.name === "toServer") {
+      if (msg.roomCode) {
+        socket.emit("joinRoom", msg.roomCode);
+      }
+      if (msg.getNextSong) {
+        socket.emit("getNextSong");
+      }
+      if (msg.statusUpdate) {
+        socket.emit("statusUpdate", msg.statusUpdate);
+      }
+    }
   });
 });

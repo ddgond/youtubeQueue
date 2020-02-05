@@ -12,9 +12,10 @@ getNextSong = () => {
 updateSongProgress = (state) => {
   // state has:
   // {
-  //  state: (loading, playing, paused, adPlaying, adPaused)
+  //  state: (playing, paused, adPlaying, adPaused)
   //  progress: 0 if loading, progress through video otherwise
   //  duration: 0 if loading, adPlaying, adPaused, video duration otherwise
+  //  title: title of current video
   // }
   //
   // returns true on success, false on failure

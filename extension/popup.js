@@ -16,18 +16,29 @@
 // }
 
 // Just for testing purposes
-let nextSongButton = document.querySelector("#nextSong");
 
-// TODO: add listeners using executeScript that can determine when a video ends
+const nextSongButton = document.querySelector("#nextSong");
+const joinRoomButton = document.querySelector("#joinRoom");
+const roomCodeInput = document.querySelector("#roomCode");
+const port = chrome.runtime.connect({name: "toServer"});
+
 nextSongButton.onclick = (event) => {
-  chrome.tabs.query({url: "*://*.youtube.com/*"}, (tabs) => {
-    if (tabs.length > 0) {
-      getNextSong().then(nextSongUrl => {
-        chrome.tabs.update(
-          tabs[0].id,
-          {url: nextSongUrl}
-        );
-      });
-    }
-  })
+  port.postMessage({getNextSong: true});
+  // chrome.tabs.query({url: "*://*.youtube.com/*"}, (tabs) => {
+  //   if (tabs.length > 0) {
+  //     getNextSong().then(nextSongUrl => {
+  //       console.log("hi");
+  //       chrome.tabs.update(
+  //         tabs[0].id,
+  //         {url: nextSongUrl}
+  //       );
+  //     });
+  //   }
+  // });
+}
+
+joinRoomButton.onclick = (event) => {
+  if (roomCodeInput.value != "") {
+    port.postMessage({roomCode: roomCodeInput.value});
+  }
 }

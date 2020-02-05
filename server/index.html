@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <p>Enter a room code.</p>
+    <input id="roomCodeInput" type="text"/>
+    <button id="joinRoomButton" type="button">Join Room</button>
+    <p>Currently playing: <span id="currentlyPlaying"></span></p>
+    <p id="state" style="display: inline-block"></p>
+    <p id="progress" style="display: inline-block"></p>
+    <button id="ad" type="button" hidden>Skip Ad</button>
+    <p>Enter a youtube video.</p>
+    <input id="videoInput" type="text"/>
+    <button id="submitVideoButton" type="button">Submit video</button>
+
+    <p>Queued Videos</p>
+    <div id="videoQueue"></div>
+
+    <script src="/js/index.js"></script>
+  </body>
+</html>
