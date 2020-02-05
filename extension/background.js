@@ -1,4 +1,4 @@
-const defaultServerUrl = "http://localhost:3000";
+const defaultServerUrl = "http://3.20.138.223/";
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({serverUrl: defaultServerUrl}, () => {
