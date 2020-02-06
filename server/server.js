@@ -6,7 +6,7 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const { YoutubeDataAPI } = require("youtube-v3-api");
 const youtube = "AIzaSyDY88lH4lop431dP6hYrKvqpXM4L1aTDnAs"; // substring last char to prevent scraping of key, yes this is terrible practice
-const ytKey = youtube.substring(0, youtube.length - 1)
+const ytKey = youtube.substring(0, youtube.length - 1);
 const ytApi = new YoutubeDataAPI(ytKey);
 
 app.get('/', (req, res) => {
@@ -33,13 +33,13 @@ ytSearch = (searchTerm) => { // Returns a Promise
 
 sortRoom = (roomCode) => {
   rooms[roomCode].sort((a, b) => {
-    if (a.votes.length > b.votes.length) {
+    if (a.votes.length - a.downVotes.length > b.votes.length - b.downVotes.length) {
       return -1;
     }
-    if (a.votes.length < b.votes.length) {
+    if (a.votes.length - a.downVotes.length < b.votes.length - b.downVotes.length) {
       return 1;
     }
-    if (a.votes.length === b.votes.length) {
+    if (a.votes.length - a.downVotes.length === b.votes.length - b.downVotes.length) {
       return a.time - b.time;
     }
   });
@@ -121,7 +121,7 @@ io.on('connection', function(socket) {
       if (rooms[connectedRoom].filter((entry) => entry.video.id.videoId === video.id.videoId).length > 0) {
         return;
       }
-      rooms[connectedRoom].push({video: video, votes: [socket.id], time: Date.now()});
+      rooms[connectedRoom].push({video: video, votes: [socket.id], downVotes: [], time: Date.now()});
       io.to(connectedRoom).emit("queueList", rooms[connectedRoom]);
     }
   });
@@ -133,7 +133,25 @@ io.on('connection', function(socket) {
         if (rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0].votes.includes(socket.id)) {
           return;
         }
-        rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0].votes.push(socket.id);
+        const vid = rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0]
+        vid.votes.push(socket.id);
+        vid.downVotes = vid.downVotes.filter((id) => id != socket.id);
+        sortRoom(connectedRoom);
+        io.to(connectedRoom).emit("queueList", rooms[connectedRoom]);
+      }
+    }
+  });
+
+  socket.on('downvote', (data) => {
+    if (connectedRoom) {
+      console.log(data);
+      if (data.video.id.videoId) {
+        if (rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0].downVotes.includes(socket.id)) {
+          return;
+        }
+        const vid = rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0]
+        vid.downVotes.push(socket.id);
+        vid.votes = vid.votes.filter((id) => id != socket.id);
         sortRoom(connectedRoom);
         io.to(connectedRoom).emit("queueList", rooms[connectedRoom]);
       }
@@ -146,7 +164,10 @@ io.on('connection', function(socket) {
         rooms[connectedRoom] = rooms[connectedRoom].map((entry) => {
           if (entry.video.id.videoId === data.video.id.videoId) {
             entry.votes = entry.votes.filter((id) => {
-              return id != socket.id
+              return id != socket.id;
+            });
+            entry.downVotes = entry.downVotes.filter((id) => {
+              return id != socket.id;
             });
           }
           return entry;

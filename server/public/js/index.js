@@ -20,9 +20,54 @@ socket.on("queueList", (list) => {
   queue.innerHTML = "";
   list.map((data) => {
     const div = document.createElement("div");
-    div.className = "flex items-start justify-between mv3";
-    const leftDiv = document.createElement("div");
-    leftDiv.className = "flex items-start";
+    div.className = "flex items-center justify-between mv3";
+
+    const voteDiv = document.createElement("div");
+    voteDiv.className = "flex flex-column items-center justify-center mr3";
+    voteDiv.innerHTML = `
+      <button type="button" class="input-reset grow bg-transparent bw0 pointer black-80 ${data.votes.includes(socket.id) ? "green" : ""}">
+        <svg class="w2 h2" viewBox="0 0 128 64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                <g id="icon-copy" fill="currentColor">
+                    <polygon id="Path" points="64 0 0 64 128 64"></polygon>
+                </g>
+            </g>
+        </svg>
+      </button>
+      <p class="mv0 nowrap">${data.votes.length - data.downVotes.length}</p>
+      <button type="button" class="input-reset grow bg-transparent bw0 pointer black-80 ${data.downVotes.includes(socket.id) ? "red" : ""}">
+        <svg class="w2 h2" viewBox="0 0 128 64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                <g id="icon-copy-2" fill="currentColor">
+                    <polygon id="Path-2" points="0 0 128 0 64 64"></polygon>
+                </g>
+            </g>
+        </svg>
+      </button>
+      `;
+
+    voteDiv.querySelectorAll("button")[0].onclick = () => {
+      if (data.votes.includes(socket.id)) {
+        socket.emit("unvote", {video: data.video});
+        voteDiv.querySelectorAll("button")[0].classList.remove("green");
+      } else {
+        socket.emit("vote", {video: data.video});
+        voteDiv.querySelectorAll("button")[0].classList.add("green");
+      }
+    }
+
+    voteDiv.querySelectorAll("button")[1].onclick = () => {
+      if (data.downVotes.includes(socket.id)) {
+        socket.emit("unvote", {video: data.video});
+        voteDiv.querySelectorAll("button")[0].classList.remove("red");
+      } else {
+        socket.emit("downvote", {video: data.video});
+        voteDiv.querySelectorAll("button")[0].classList.add("red");
+      }
+    }
+
+    const videoDiv = document.createElement("div");
+    videoDiv.className = "flex items-start";
     const thumb = document.createElement("img");
     thumb.src = data.video.snippet.thumbnails.medium.url;
     thumb.className = "db br3 w5";
@@ -38,37 +83,15 @@ socket.on("queueList", (list) => {
     desc.innerText = data.video.snippet.description;
     desc.className = "f7 black-60 mv2";
 
-    const rightDiv = document.createElement("div");
-    rightDiv.className = "flex flex-column items-end";
-    const votes = document.createElement("p");
-    votes.innerText = `Votes: ${data.votes.length}`;
-    votes.className = "mv2";
-    const voteButton = document.createElement("button");
-    voteButton.setAttribute("type", "button");
-    voteButton.className = "b pv2 input-reset ba b--black bg-white pointer f6 dim";
-    if (data.votes.includes(socket.id)) {
-      voteButton.onclick = () => {
-        socket.emit("unvote", {video: data.video});
-      }
-      voteButton.innerText = "Unvote";
-    } else {
-      voteButton.onclick = () => {
-        socket.emit("vote", {video: data.video});
-      }
-      voteButton.innerText = "Vote";
-    }
+    div.appendChild(voteDiv);
 
-    leftDiv.appendChild(thumb);
+    videoDiv.appendChild(thumb);
     info.appendChild(title);
     info.appendChild(channel);
     info.appendChild(desc);
-    leftDiv.appendChild(info);
-    div.appendChild(leftDiv);
+    videoDiv.appendChild(info);
+    div.appendChild(videoDiv);
 
-    rightDiv.appendChild(votes);
-    rightDiv.appendChild(voteButton);
-
-    div.appendChild(rightDiv);
     queue.appendChild(div);
   });
 });
@@ -155,6 +178,13 @@ updateUI = (roomCode) => {
   }
 }
 
+roomCodeInput.onkeyup = (evt) => {
+  if (evt.keyCode === 13) {
+    evt.preventDefault();
+    joinRoomButton.click();
+  }
+}
+
 joinRoomButton.onclick = () => {
   socket.emit("joinRoom", roomCodeInput.value);
   updateUI(roomCodeInput.value);
@@ -167,6 +197,13 @@ leaveRoomButton.onclick = () => {
   showQueue(false);
   showSearchResults(false);
   document.querySelector("#searchInput").value = "";
+}
+
+searchInput.onkeyup = (evt) => {
+  if (evt.keyCode === 13) {
+    evt.preventDefault();
+    submitSearchButton.click();
+  }
 }
 
 submitSearchButton.onclick = () => {

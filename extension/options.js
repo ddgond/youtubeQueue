@@ -13,7 +13,12 @@ chrome.storage.sync.get('defaultServerUrl', (data) => {
   defaultServerReminder.innerText = "Default server is " + data.defaultServerUrl;
 })
 
-serverUrlInput.onkeyup = () => {
+serverUrlInput.onkeyup = (evt) => {
+  if (evt.keyCode === 13) {
+    evt.preventDefault();
+    saveButton.click();
+    return;
+  }
   if (serverUrlInput.value != currentUrl) {
     saveStatus.innerText = "Changes have not been saved.";
     saveStatus.style.color = "orange";
