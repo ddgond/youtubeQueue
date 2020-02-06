@@ -1,32 +1,56 @@
 <html>
   <head>
     <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"/>
   </head>
-  <body>
-    <div id="unconnectedDiv">
-      <p>Enter a room code.</p>
-      <input id="roomCodeInput" type="text"/>
-      <button id="joinRoomButton" type="button">Join Room</button>
+  <body class="sans-serif">
+    <div>
+      <h1 class="f2 ma0 pa4 bg-red white nowrap">YoutubeQueue</h1>
     </div>
-    <div id="connectedDiv" hidden>
-      <p>You have connected to room: <span id="connectedRoom"></span></p>
-      <button id="leaveRoomButton" type="button">Leave Room</button>
-      <p>Currently playing: <span id="currentlyPlaying"></span></p>
-      <p id="state" style="display: inline-block"></p>
-      <p id="progress" style="display: inline-block"></p>
-      <button id="ad" type="button" hidden>Skip Ad</button>
-      <p>Search for a youtube video.</p>
-      <input id="searchInput" type="text"/>
-      <button id="submitSearchButton" type="button">Search</button>
-
-      <div id="searchResultsParent">
-        <h3>Search Results</h3>
-        <div id="searchResults"></div>
+    <div>
+      <div id="unconnectedDiv" class="measure-narrow ma4">
+        <p class="f6 b db mv2">Enter a room code.</p>
+        <input id="roomCodeInput" class="input-reset ba b--black-20 pa2 mb2 db w-100" type="text"/>
+        <button id="joinRoomButton" class="b pv2 w-100 input-reset ba b--black bg-transparent dim pointer f6 dib" type="button">Join Room</button>
+        <p class="f6 black-60">Enter the same code as displayed on the device
+                               running the Chrome Extension.</p>
       </div>
-
-      <div id="videoQueueParent">
-        <h3>Queued Videos</h3>
-        <div id="videoQueue"></div>
+      <div id="connectedDiv" class="ma4" hidden>
+        <div id="roomInfo" class="flex flex-wrap justify-between mw7">
+          <div>
+            <p class="f6 mt2 mb0 fw4">Current Room</p>
+            <p id="connectedRoom" class="f3 fw6 mt0 mb2 pt0"></p>
+          </div>
+          <div>
+            <p class="f6 mt2 mb0 fw4">Current Song</p>
+            <p id="currentlyPlaying" class="f3 fw6 mt0 mb2 pt0">Nothing is playing</p>
+          </div>
+          <div>
+            <p class="f6 mt2 mb0 fw4">State</p>
+            <p id="state" class="f3 fw6 mt0 mb2 pt0">idle</p>
+          </div>
+          <div>
+            <p class="f6 mt2 mb0 fw4">Progress</p>
+            <p id="progress" class="f3 fw6 mt0 mb2 pt0">0:00/0:00</p>
+          </div>
+        </div>
+        <button id="leaveRoomButton" class="b pv2 mt4 input-reset ba b--black bg-transparent dim pointer f6" type="button">Leave Room</button>
+        <hr class="mw7 bb bw1 b--black-10 mt4 mb4 mh0">
+        <div id="searchDiv">
+          <div id="searchControls" class="mb4">
+            <p class="f6 b db mv2">Search for a youtube video.</p>
+            <input id="searchInput" class="input-reset ba b--black-20 pa2 mb2 dib measure-narrow w-100" type="text"/>
+            <button id="submitSearchButton" class="b pv2 input-reset ba b--black bg-transparent dim pointer f6 dib" type="button">Search</button>
+          </div>
+          <div id="searchResultsParent" class="mv2 mw7 ba bw2 b--orange" hidden>
+            <h3 class="f3 bg-orange white ma0 pa3">Search Results</h3>
+            <div id="searchResults" class="ph3"></div>
+          </div>
+        </div>
+        <div id="videoQueueDiv" class="mv2 mw7 ba bw2 b--green" hidden>
+          <h3 class="f3 bg-green white ma0 pa3">Queued Videos</h3>
+          <div id="videoQueue" class="ph3"></div>
+        </div>
       </div>
     </div>
 

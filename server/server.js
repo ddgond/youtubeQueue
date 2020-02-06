@@ -25,26 +25,11 @@ ytSearch = (searchTerm) => { // Returns a Promise
   return new Promise((resolve, reject) => {
     ytApi.searchAll(searchTerm, 5, {type: "video"}).then((data) => {
       resolve(data.items);
+    }, (err) => {
+      reject(new Error('Failed to get video data.'));
     });
   });
 }
-
-// ytSearch("diggy diggy hole").then((results)=>console.log(results));
-// result
-// {
-//   kind: 'youtube#searchResult',
-//   etag: '"Fznwjl6JEQdo1MGvHOGaz_YanRU/zYwQecK_9-LYq4oBRpzO0mMq8UE"',
-//   id: { kind: 'youtube#video', videoId: 'ytWz0qVvBZ0' },
-//   snippet: {
-//     publishedAt: '2014-07-11T17:00:02.000Z',
-//     channelId: 'UCH-_hzb2ILSCo9ftVSnrCIQ',
-//     title: '♪ Diggy Diggy Hole',
-//     description: 'Out now on iTunes: http://apple.co/2uVgfmL ♪ Amazon UK: http://bit.ly/DiggyAmazonUK ♪ Amazon US: http://bit.ly/DiggyAmazonUS ♥ Diggy Diggy Hole T-shirt: ...',
-//     thumbnails: [Object],
-//     channelTitle: 'YOGSCAST Lewis & Simon',
-//     liveBroadcastContent: 'none'
-//   }
-// }
 
 sortRoom = (roomCode) => {
   rooms[roomCode].sort((a, b) => {
@@ -75,6 +60,7 @@ io.on('connection', function(socket) {
     if (!rooms[connectedRoom]) {
       rooms[connectedRoom] = [];
     }
+    socket.emit("queueList", rooms[connectedRoom]);
   });
 
   socket.on('leaveRoom', function() {
@@ -105,7 +91,29 @@ io.on('connection', function(socket) {
   socket.on('search', (query) => {
     ytSearch(query).then((results) => {
       socket.emit("searchResults", results);
-    })
+    }, (err) => {
+      console.error(err);
+      socket.emit("searchResults", [
+        {
+          id:{videoId:'dQw4w9WgXcQ'},
+          snippet:{
+            title:'Never Gonna Give You Up',
+            description:'Youtube API broke. Oops.',
+            thumbnails:{medium:{url:"https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg?sqp=-oaymwEZCNACELwBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCALyvNJwgrtG1GpHFugkV0e3jqdg"}},
+            channelTitle:"Official Rick Astley"
+          }
+        },
+        {
+          id:{videoId:'ytWz0qVvBZ0'},
+          snippet:{
+            title:'Diggy Diggy Hole',
+            description:'Choose from these songs in the meantime.',
+            thumbnails:{medium:{url:"https://i.ytimg.com/vi/ytWz0qVvBZ0/hqdefault.jpg?sqp=-oaymwEZCNACELwBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCU7BORagYn09I2MvD4wZd_t1nklw"}},
+            channelTitle:"YOGSCAST Lewis & Simon"
+          }
+        }
+      ]);
+    });
   });
 
   socket.on('addToQueue', (video) => {
@@ -114,24 +122,27 @@ io.on('connection', function(socket) {
         return;
       }
       rooms[connectedRoom].push({video: video, votes: [socket.id], time: Date.now()});
+      io.to(connectedRoom).emit("queueList", rooms[connectedRoom]);
     }
   });
 
   socket.on('vote', (data) => {
     if (connectedRoom) {
-      if (data.videoUrl) {
-        if (rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.videoUrl)[0].votes.includes(socket.id)) {
+      console.log(data);
+      if (data.video.id.videoId) {
+        if (rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0].votes.includes(socket.id)) {
           return;
         }
-        rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.videoUrl)[0].votes.push(socket.id);
+        rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0].votes.push(socket.id);
         sortRoom(connectedRoom);
+        io.to(connectedRoom).emit("queueList", rooms[connectedRoom]);
       }
     }
   });
 
   socket.on('unvote', (data) => {
     if (connectedRoom) {
-      if (data.videoUrl) {
+      if (data.video.id.videoId) {
         rooms[connectedRoom] = rooms[connectedRoom].map((entry) => {
           entry.votes = entry.votes.filter((id) => {
             return id != socket.id
@@ -139,6 +150,7 @@ io.on('connection', function(socket) {
           return entry;
         });
         sortRoom(connectedRoom);
+        io.to(connectedRoom).emit("queueList", rooms[connectedRoom]);
       }
     }
   });
