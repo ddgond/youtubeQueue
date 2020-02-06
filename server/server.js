@@ -144,9 +144,11 @@ io.on('connection', function(socket) {
     if (connectedRoom) {
       if (data.video.id.videoId) {
         rooms[connectedRoom] = rooms[connectedRoom].map((entry) => {
-          entry.votes = entry.votes.filter((id) => {
-            return id != socket.id
-          });
+          if (entry.video.id.videoId === data.video.id.videoId) {
+            entry.votes = entry.votes.filter((id) => {
+              return id != socket.id
+            });
+          }
           return entry;
         });
         sortRoom(connectedRoom);
