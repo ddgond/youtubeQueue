@@ -1,14 +1,19 @@
 <!DOCTYPE html>
   <html>
     <head>
+      <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"/>
     </head>
-    <body>
+    <body class="sans-serif">
       <div>
-        <p>Enter a server url.</p>
-        <input id="serverUrlInput" type="text"/>
-        <p id="defaultServerReminder"></p>
-        <button id="saveUrlButton" type="button">Save</button>
-        <p id="saveStatus"></p>
+        <h1 class="f2 ma0 pa4 bg-red white nowrap">YoutubeQueue Settings</h1>
+      </div>
+      <div class="measure-narrow ma4">
+        <p class="f6 b db mv2">Enter a server url.</p>
+        <input id="serverUrlInput" class="input-reset ba b--black-20 pa2 mb2 db w-100" type="text"/>
+        <button id="saveUrlButton" class="b pv2 w-100 input-reset ba b--black bg-transparent dim pointer f6 dib" type="button">Save</button>
+        <p id="saveStatus"> </p>
+        <p id="defaultServerReminder" class="black-60"></p>
+        <p class="black-60">Server code can be acquired from <a href="https://github.com/ddgond/youtubeQueue">GitHub</a>.</p>
       </div>
     </body>
     <script src="options.js"></script>

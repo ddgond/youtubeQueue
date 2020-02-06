@@ -1,6 +1,6 @@
 {
   "name": "YouTube Queue",
-  "version": "0.2",
+  "version": "0.3",
   "description": "Queue videos from multiple computers to a single computer!",
   "permissions": ["storage", "declarativeContent", "activeTab"],
   "options_page": "options.html",

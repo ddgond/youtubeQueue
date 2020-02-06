@@ -2,18 +2,31 @@ const saveButton = document.getElementById('saveUrlButton');
 const serverUrlInput = document.querySelector("#serverUrlInput");
 const defaultServerReminder = document.querySelector("#defaultServerReminder");
 const saveStatus = document.getElementById('saveStatus');
+let currentUrl = "";
 
 chrome.storage.sync.get('serverUrl', (data) => {
   serverUrlInput.value = data.serverUrl;
+  currentUrl = data.serverUrl;
 })
 
 chrome.storage.sync.get('defaultServerUrl', (data) => {
   defaultServerReminder.innerText = "Default server is " + data.defaultServerUrl;
 })
 
+serverUrlInput.onkeyup = () => {
+  if (serverUrlInput.value != currentUrl) {
+    saveStatus.innerText = "Changes have not been saved.";
+    saveStatus.style.color = "orange";
+  } else {
+    saveStatus.innerText = "";
+    saveStatus.style.color = "black";
+  }
+};
+
 saveButton.addEventListener('click', () => {
   saveStatus.innerText = "Saving server URL...";
   saveStatus.style.color = "orange";
+  currentUrl = serverUrlInput.value;
   chrome.storage.sync.set(
     {serverUrl: serverUrlInput.value},
     () => {

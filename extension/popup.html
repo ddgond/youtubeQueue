@@ -1,21 +1,27 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <style>
-    </style>
+    <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"/>
     <script src="socket.io.js"></script>
     <script src="utils.js"></script>
   </head>
-  <body>
-    <div id="connectedDiv" hidden>
-      <p>You have connected to room: <span id="connectedRoom"></span></p>
-      <button id="nextSong" type="button">Next Song</button>
-      <button id="leaveRoom" type="button">Leave Room</button>
+  <body class="ma0 sans-serif">
+    <h1 class="f2 ma0 pa3 bg-red white nowrap ba bb-0 b--black-90">YoutubeQueue</h1>
+    <div class="ph2 pt1 pb2 ba b--black-90 bt-0">
+      <div id="connectedDiv" hidden>
+        <p class="f7 mt2 mb0 fw4">Current Room</p>
+        <p id="connectedRoom" class="f4 fw6 mt0 mb2 pt0"></p>
+        <button id="nextSong" class="b pv2 w-100 input-reset ba b--black bg-transparent dim pointer f6" type="button">Next Song</button>
+        <button id="leaveRoom" class="b pv2 w-100 input-reset ba bt-0 b--black bg-transparent dim pointer f6" type="button">Leave Room</button>
+      </div>
+      <div id="unconnectedDiv">
+        <p class="f7 b db mv2">Choose a room code.</p>
+        <input id="roomCode" class="input-reset ba b--black-20 pa2 mb2 db w-100" type="text" placeholder="Room Code"/>
+        <button id="joinRoom" class="b pv2 w-100 input-reset ba b--black bg-transparent dim pointer f6 dib" type="button">Create Room</button>
+      </div>
     </div>
-    <div id="unconnectedDiv">
-      <p>Choose a room code.</p>
-      <input id="roomCode" type="text"/>
-      <button id="joinRoom" type="button">Create Room</button>
+    <div class="pa2 ba bw1 b--black-10 bg-black-50">
+      <p id="serverUrl" class="white-80 mv0"></p>
     </div>
     <script src="popup.js"></script>
   </body>
