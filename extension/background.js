@@ -24,6 +24,12 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 let socket;
+let lastRequestTime = 0;
+const requestCooldown = 4000;
+
+chrome.storage.sync.set({
+  hostRoomCode:null
+});
 
 const connectToSocketServer = (url) => {
   chrome.storage.sync.set({
@@ -43,6 +49,18 @@ const connectToSocketServer = (url) => {
       if (tabs.length > 0) {
         const port = chrome.tabs.connect(tabs[0].id, {name:"fromServer"});
         port.postMessage({songUrl: songUrl});
+      } else {
+        chrome.tabs.create({url: songUrl});
+      }
+    });
+  });
+  socket.on("queueList", (list) => {
+    chrome.tabs.query({url: "*://*.youtube.com/*"}, (tabs) => {
+      if ((tabs.length == 0 || !(tabs[0].url.includes("watch?v="))) && list.length > 0) {
+        if (Date.now() - lastRequestTime > requestCooldown) {
+          socket.emit("getNextSong");
+          lastRequestTime = Date.now();
+        }
       }
     });
   });

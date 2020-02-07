@@ -4,7 +4,7 @@
   "version": "0.3.2",
   "description": "Queue videos from multiple computers to a single computer!",
   "author": "Daniel Dangond",
-  "permissions": ["storage", "declarativeContent", "activeTab"],
+  "permissions": ["storage", "declarativeContent", "activeTab", "tabs"],
   "options_page": "options.html",
   "background": {
     "scripts": [

@@ -33,6 +33,8 @@ setInterval(() => {
   sendStatusToServer();
 }, 1000);
 
+let requestedNextSong = false;
+
 sendStatusToServer = () => {
   const ad = document.querySelector(".ytp-ad-player-overlay") != null;
   const playButton = document.querySelector(".ytp-play-button");
@@ -40,11 +42,11 @@ sendStatusToServer = () => {
   const videoPlayer = document.querySelector("video");
   const currentTime = convertTime(videoPlayer.currentTime);
   const duration = convertTime(videoPlayer.duration);
-  if (!ad && videoPlayer.duration - videoPlayer.currentTime < 1.2) {
-    console.log("Sending message");
+  if (!ad && videoPlayer.duration - videoPlayer.currentTime < 1.05 && !requestedNextSong) {
+    requestedNextSong = true;
     setTimeout(() => {
       toServerPort.postMessage({getNextSong: true});
-    }, 2000);
+    }, 1000);
   }
   const title = document.querySelector(".title").innerText;
   const state = {

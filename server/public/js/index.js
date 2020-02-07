@@ -178,6 +178,14 @@ updateUI = (roomCode) => {
   }
 }
 
+cleanUp = () => {
+  document.querySelector("#roomCodeInput").value = "";
+  document.querySelector("#searchInput").value = "";
+  document.querySelector("#currentlyPlaying").innerText = "Nothing is playing";
+  document.querySelector("#state").innerText = "idle";
+  document.querySelector("#progress").innerText = "0:00 / 0:00";
+}
+
 roomCodeInput.onkeyup = (evt) => {
   if (evt.keyCode === 13) {
     evt.preventDefault();
@@ -188,7 +196,7 @@ roomCodeInput.onkeyup = (evt) => {
 joinRoomButton.onclick = () => {
   socket.emit("joinRoom", roomCodeInput.value);
   updateUI(roomCodeInput.value);
-  document.querySelector("#roomCodeInput").value = "";
+  cleanUp();
 }
 
 leaveRoomButton.onclick = () => {
@@ -196,7 +204,7 @@ leaveRoomButton.onclick = () => {
   updateUI(null);
   showQueue(false);
   showSearchResults(false);
-  document.querySelector("#searchInput").value = "";
+  cleanUp();
 }
 
 searchInput.onkeyup = (evt) => {
