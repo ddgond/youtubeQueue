@@ -3,14 +3,11 @@ socket.on("connect", () => {
   console.log('Connected to socket!');
 });
 socket.on("statusUpdate", (status) => {
-  console.log("Status updated");
-  console.log(status);
   document.querySelector("#currentlyPlaying").innerText = status.title || "Nothing is playing.";
   document.querySelector("#state").innerText = status.state || "idle";
   document.querySelector("#progress").innerText = `${status.progress} / ${status.duration}`;
 });
 socket.on("queueList", (list) => {
-  console.log(list);
   const queueParent = document.querySelector("#videoQueueDiv");
   if (list.length > 0) {
     showQueue(true);
@@ -21,7 +18,7 @@ socket.on("queueList", (list) => {
   queue.innerHTML = "";
   list.map((data) => {
     const div = document.createElement("div");
-    div.className = "flex items-center justify-between mv3";
+    div.className = "flex items-center mv3";
 
     const voteDiv = document.createElement("div");
     voteDiv.className = "flex flex-column items-center justify-center mr3";
@@ -141,7 +138,25 @@ socket.on("searchResults", (results) => {
     div.appendChild(selectButton);
     searchResults.appendChild(div);
   });
-})
+});
+socket.on("skipStatus", (status) => {
+  const skipVotesSpan = document.querySelector("#skipVotes");
+  const skipVotesNeededSpan = document.querySelector("#skipVotesNeeded");
+  const skipButton = document.querySelector("#skipButton");
+  skipVotesSpan.innerText = status.skipVotes.length;
+  skipVotesNeededSpan.innerText = status.skipVotesNeeded;
+  if (status.skipVotes.includes(socket.id)) {
+    skipButton.innerText = "Remove vote";
+    skipButton.onclick = () => {
+      socket.emit("unvoteSkip");
+    }
+  } else {
+    skipButton.innerText = "Skip video";
+    skipButton.onclick = () => {
+      socket.emit("voteSkip");
+    }
+  }
+});
 
 const showSearchResults = (doShow) => {
   if (doShow) {

@@ -5,8 +5,14 @@ const port = 3000;
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const { YoutubeDataAPI } = require("youtube-v3-api");
-const youtube = "AIzaSyDY88lH4lop431dP6hYrKvqpXM4L1aTDnAs"; // substring last char to prevent scraping of key, yes this is terrible practice
-const ytKey = youtube.substring(0, youtube.length - 1);
+const youtube = "aizasycf6oxv4fm65fvcfkpsxt7hzc0jjywu7jw"; // slightly obscured to prevent scraping of key, yes this is terrible practice
+const l = [0,1,4,6,7,9,10,11,14,18,21,22,24,31,33,34,35,37];
+const ytKey = youtube.split("").map((char, index) => {
+  if (l.includes(index)) {
+    return char.toUpperCase();
+  }
+  return char;
+}).join("");
 const ytApi = new YoutubeDataAPI(ytKey);
 
 app.get('/', (req, res) => {
@@ -45,6 +51,29 @@ sortRoom = (roomCode) => {
   });
 }
 
+playNextSong = (connectedRoom) => {
+  if (connectedRoom) {
+    if (rooms[connectedRoom].entries.length > 0) {
+      io.to(connectedRoom).emit("playNextSong", `https://www.youtube.com/watch?v=${rooms[connectedRoom].entries.shift().video.id.videoId}`);
+    } else {
+      io.to(connectedRoom).emit("playNextSong", "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    }
+  }
+}
+
+getSkipRequirement = (connectedRoom) => {
+  return Math.min(3,rooms[connectedRoom].users.length);
+}
+
+getSkipStatus = (connectedRoom) => {
+  return {skipVotes: rooms[connectedRoom].skipVotes, skipVotesNeeded: getSkipRequirement(connectedRoom)};
+}
+
+skipCurrentSong = (connectedRoom) => {
+  rooms[connectedRoom].skipVotes = [];
+  playNextSong(connectedRoom);
+}
+
 io.on('connection', function(socket) {
   console.log('a user connected');
   let connectedRoom;
@@ -58,7 +87,7 @@ io.on('connection', function(socket) {
     console.log(`a user joined room ${roomCode}`);
     connectedRoom = roomCode;
     if (!rooms[connectedRoom]) {
-      rooms[connectedRoom] = {entries: [], state: {}, users: [{id: socket.id, ip: socket.handshake.address}]};
+      rooms[connectedRoom] = {entries: [], state: {}, users: [{id: socket.id, ip: socket.handshake.address}], skipVotes: []};
     }
     if (rooms[connectedRoom].users.filter((user) => user.ip === socket.handshake.address && user.id != socket.id).length > 0) {
       rooms[connectedRoom].users = rooms[connectedRoom].users.map((user) => {
@@ -72,6 +101,12 @@ io.on('connection', function(socket) {
             });
             return entry;
           });
+          rooms[connectedRoom].skipVotes = rooms[connectedRoom].skipVotes.map(voter => {
+            if (voter === user.id) {
+              return socket.id;
+            }
+            return voter;
+          })
           user.id = socket.id; // Update user to reflect connection from different socket
         }
         return user;
@@ -79,6 +114,7 @@ io.on('connection', function(socket) {
     }
     socket.emit("statusUpdate", rooms[connectedRoom].state);
     socket.emit("queueList", rooms[connectedRoom].entries);
+    socket.emit("skipStatus", getSkipStatus(connectedRoom));
   });
 
   socket.on('leaveRoom', function() {
@@ -90,13 +126,7 @@ io.on('connection', function(socket) {
   });
 
   socket.on('getNextSong', function() {
-    if (connectedRoom) {
-      if (rooms[connectedRoom].entries.length > 0) {
-        io.to(connectedRoom).emit("playNextSong", `https://www.youtube.com/watch?v=${rooms[connectedRoom].entries.shift().video.id.videoId}`);
-      } else {
-        io.to(connectedRoom).emit("playNextSong", "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
-      }
-    }
+    playNextSong(connectedRoom);
   });
 
   socket.on('statusUpdate', function(status) {
@@ -199,21 +229,23 @@ io.on('connection', function(socket) {
 
   socket.on('voteSkip', () => {
     if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
-      if (data.video.id.videoId) {
-        rooms[connectedRoom].entries = rooms[connectedRoom].entries.map((entry) => {
-          if (entry.video.id.videoId === data.video.id.videoId) {
-            entry.votes = entry.votes.filter((id) => {
-              return id != socket.id;
-            });
-            entry.downVotes = entry.downVotes.filter((id) => {
-              return id != socket.id;
-            });
-          }
-          return entry;
-        });
-        sortRoom(connectedRoom);
-        io.to(connectedRoom).emit("queueList", rooms[connectedRoom].entries);
+      if (rooms[connectedRoom].skipVotes.filter((voter) => voter === socket.id).length > 0) {
+        return;
+      };
+      rooms[connectedRoom].skipVotes.push(socket.id);
+      if (rooms[connectedRoom].skipVotes.length >= getSkipRequirement(connectedRoom)) {
+        skipCurrentSong(connectedRoom);
       }
+      io.to(connectedRoom).emit("skipStatus", getSkipStatus(connectedRoom));
+    }
+  });
+
+  socket.on('unvoteSkip', () => {
+    if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
+      if (rooms[connectedRoom].skipVotes.filter((voter) => voter === socket.id).length > 0) {
+        rooms[connectedRoom].skipVotes = rooms[connectedRoom].skipVotes.filter((voter) => voter != socket.id);
+        io.to(connectedRoom).emit("skipStatus", getSkipStatus(connectedRoom));
+      };
     }
   });
 
