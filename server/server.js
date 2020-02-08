@@ -64,6 +64,14 @@ playNextSong = (connectedRoom) => {
   }
 }
 
+addToQueue = (socket, connectedRoom, video) => {
+  if (rooms[connectedRoom].entries.filter((entry) => entry.video.id.videoId === video.id.videoId).length > 0) {
+    return;
+  }
+  rooms[connectedRoom].entries.push({video: video, votes: [socket.id], downVotes: [], time: Date.now()});
+  io.to(connectedRoom).emit("queueList", rooms[connectedRoom].entries);
+}
+
 getSkipRequirement = (connectedRoom) => {
   return Math.min(3,rooms[connectedRoom].users.length);
 }
@@ -141,12 +149,42 @@ io.on('connection', function(socket) {
   });
 
   socket.on('search', (query) => {
-    ytSearch(query).then((results) => {
-      socket.emit("searchResults", results);
-    }, (err) => {
-      console.error(err);
-      socket.emit("searchResults", [
-        {
+    if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
+      ytSearch(query).then((results) => {
+        socket.emit("searchResults", results);
+      }, (err) => {
+        console.error(err);
+        socket.emit("searchResults", [
+          {
+            id:{videoId:'dQw4w9WgXcQ'},
+            snippet:{
+              title:'Never Gonna Give You Up',
+              description:'Youtube API broke. Oops.',
+              thumbnails:{medium:{url:"https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg?sqp=-oaymwEZCNACELwBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCALyvNJwgrtG1GpHFugkV0e3jqdg"}},
+              channelTitle:"Official Rick Astley"
+            }
+          },
+          {
+            id:{videoId:'ytWz0qVvBZ0'},
+            snippet:{
+              title:'Diggy Diggy Hole',
+              description:'Choose from these songs in the meantime.',
+              thumbnails:{medium:{url:"https://i.ytimg.com/vi/ytWz0qVvBZ0/hqdefault.jpg?sqp=-oaymwEZCNACELwBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCU7BORagYn09I2MvD4wZd_t1nklw"}},
+              channelTitle:"YOGSCAST Lewis & Simon"
+            }
+          }
+        ]);
+      });
+    }
+  });
+
+  socket.on('feelingLucky', (query) => {
+    if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
+      ytSearch(query).then((results) => {
+        addToQueue(socket, connectedRoom, results[0]);
+      }, (err) => {
+        console.error(err);
+        addToQueue(socket, connectedRoom, {
           id:{videoId:'dQw4w9WgXcQ'},
           snippet:{
             title:'Never Gonna Give You Up',
@@ -154,27 +192,14 @@ io.on('connection', function(socket) {
             thumbnails:{medium:{url:"https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg?sqp=-oaymwEZCNACELwBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCALyvNJwgrtG1GpHFugkV0e3jqdg"}},
             channelTitle:"Official Rick Astley"
           }
-        },
-        {
-          id:{videoId:'ytWz0qVvBZ0'},
-          snippet:{
-            title:'Diggy Diggy Hole',
-            description:'Choose from these songs in the meantime.',
-            thumbnails:{medium:{url:"https://i.ytimg.com/vi/ytWz0qVvBZ0/hqdefault.jpg?sqp=-oaymwEZCNACELwBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCU7BORagYn09I2MvD4wZd_t1nklw"}},
-            channelTitle:"YOGSCAST Lewis & Simon"
-          }
-        }
-      ]);
-    });
+        });
+      });
+    }
   });
 
   socket.on('addToQueue', (video) => {
     if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
-      if (rooms[connectedRoom].entries.filter((entry) => entry.video.id.videoId === video.id.videoId).length > 0) {
-        return;
-      }
-      rooms[connectedRoom].entries.push({video: video, votes: [socket.id], downVotes: [], time: Date.now()});
-      io.to(connectedRoom).emit("queueList", rooms[connectedRoom].entries);
+      addToQueue(socket, connectedRoom, video);
     }
   });
 

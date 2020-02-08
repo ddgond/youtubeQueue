@@ -195,6 +195,7 @@ const joinRoomButton = document.querySelector("#joinRoomButton");
 const skipAdButton = document.querySelector("#ad");
 const searchInput = document.querySelector("#searchInput");
 const submitSearchButton = document.querySelector("#submitSearchButton");
+const imFeelingLuckyButton = document.querySelector("#imFeelingLuckyButton");
 
 updateUI = (roomCode) => {
   if (roomCode) {
@@ -246,4 +247,8 @@ searchInput.onkeyup = (evt) => {
 
 submitSearchButton.onclick = () => {
   socket.emit("search", searchInput.value);
+}
+
+imFeelingLuckyButton.onclick = () => {
+  socket.emit("feelingLucky", searchInput.value);
 }
