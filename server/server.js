@@ -69,6 +69,7 @@ addToQueue = (socket, connectedRoom, video) => {
     return;
   }
   rooms[connectedRoom].entries.push({video: video, votes: [socket.id], downVotes: [], time: Date.now()});
+  sortRoom(connectedRoom);
   io.to(connectedRoom).emit("queueList", rooms[connectedRoom].entries);
 }
 
