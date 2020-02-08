@@ -46,8 +46,15 @@ socket.on("queueList", (list) => {
 
     voteDiv.querySelectorAll("button")[0].onclick = () => {
       if (data.votes.includes(socket.id)) {
-        socket.emit("unvote", {video: data.video});
-        voteDiv.querySelectorAll("button")[0].classList.remove("green");
+        if (data.votes.length - data.downVotes.length <= 0) {
+          if (confirm("If the total votes reach -1, this video will be removed from the queue. Are you sure you wish to do this?")) {
+            socket.emit("unvote", {video: data.video});
+            voteDiv.querySelectorAll("button")[0].classList.remove("green");
+          }
+        } else {
+          socket.emit("unvote", {video: data.video});
+          voteDiv.querySelectorAll("button")[0].classList.remove("green");
+        }
       } else {
         socket.emit("vote", {video: data.video});
         voteDiv.querySelectorAll("button")[0].classList.add("green");
@@ -59,8 +66,15 @@ socket.on("queueList", (list) => {
         socket.emit("unvote", {video: data.video});
         voteDiv.querySelectorAll("button")[0].classList.remove("red");
       } else {
-        socket.emit("downvote", {video: data.video});
-        voteDiv.querySelectorAll("button")[0].classList.add("red");
+        if (data.votes.length - data.downVotes.length == 0 || (data.votes.length - data.downVotes.length <= 1 && data.votes.includes(socket.id))) {
+          if (confirm("If the total votes reach -1, this video will be removed from the queue. Are you sure you wish to do this?")) {
+            socket.emit("downvote", {video: data.video});
+            voteDiv.querySelectorAll("button")[0].classList.add("red");
+          }
+        } else {
+          socket.emit("downvote", {video: data.video});
+          voteDiv.querySelectorAll("button")[0].classList.add("red");
+        }
       }
     }
 

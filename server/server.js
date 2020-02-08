@@ -38,6 +38,9 @@ ytSearch = (searchTerm) => { // Returns a Promise
 }
 
 sortRoom = (roomCode) => {
+  rooms[roomCode].entries = rooms[roomCode].entries.filter((entry) => {
+    return entry.votes.length - entry.downVotes.length >= 0;
+  });
   rooms[roomCode].entries.sort((a, b) => {
     if (a.votes.length - a.downVotes.length > b.votes.length - b.downVotes.length) {
       return -1;
@@ -177,7 +180,6 @@ io.on('connection', function(socket) {
 
   socket.on('vote', (data) => {
     if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
-      console.log(data);
       if (data.video.id.videoId) {
         if (rooms[connectedRoom].entries.filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0].votes.includes(socket.id)) {
           return;
@@ -193,7 +195,6 @@ io.on('connection', function(socket) {
 
   socket.on('downvote', (data) => {
     if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
-      console.log(data);
       if (data.video.id.videoId) {
         if (rooms[connectedRoom].entries.filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0].downVotes.includes(socket.id)) {
           return;

@@ -16,30 +16,32 @@
                                running the Chrome Extension.</p>
       </div>
       <div id="connectedDiv" class="ma4" hidden>
-        <div id="roomInfo" class="flex flex-wrap justify-between mw7">
-          <div>
-            <p class="f6 mt2 mb0 fw4">Current Room</p>
-            <p id="connectedRoom" class="f3 fw6 mt0 mb2 pt0"></p>
-          </div>
-          <div>
+        <div id ="songInfo" class="flex flex-wrap mw7">
+          <div class="mr4">
             <p class="f6 mt2 mb0 fw4">Current Song</p>
             <p id="currentlyPlaying" class="f3 fw6 mt0 mb2 pt0">Nothing is playing</p>
           </div>
-          <div>
+          <div class="mr4">
             <p class="f6 mt2 mb0 fw4">State</p>
             <p id="state" class="f3 fw6 mt0 mb2 pt0">idle</p>
           </div>
-          <div>
+          <div class="mr4">
             <p class="f6 mt2 mb0 fw4">Progress</p>
             <p id="progress" class="f3 fw6 mt0 mb2 pt0">0:00 / 0:00</p>
           </div>
-          <div>
+        </div>
+        <div id="roomInfo" class="flex flex-wrap mw7 mb4">
+          <div class="mr4">
+            <p class="f6 mt2 mb0 fw4">Current Room</p>
+            <p id="connectedRoom" class="f3 fw6 mt0 mb2 pt0"></p>
+            <button id="leaveRoomButton" class="b pv2 input-reset ba b--black bg-transparent dim pointer f6" type="button">Leave Room</button>
+          </div>
+          <div class="mr4">
             <p class="f6 mt2 mb0 fw4">Skip Vote Count</p>
             <p class="f3 fw6 mt0 mb2 pt0"><span id="skipVotes">0</span> of <span id="skipVotesNeeded">0</span> needed</p>
-            <button id="skipButton" class="b pv2 input-reset ba b--black bg-transparent dim pointer f6 dib" type="button">Skip</button>
+            <button id="skipButton" class="b pv2 input-reset ba b--black bg-transparent dim pointer f6" type="button">Skip</button>
           </div>
         </div>
-        <button id="leaveRoomButton" class="b pv2 mt4 input-reset ba b--black bg-transparent dim pointer f6" type="button">Leave Room</button>
         <hr class="mw7 bb bw1 b--black-10 mt4 mb4 mh0">
         <div id="searchDiv">
           <div id="searchControls" class="mb4">
