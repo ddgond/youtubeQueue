@@ -10,6 +10,7 @@ socket.on("statusUpdate", (status) => {
   document.querySelector("#progress").innerText = `${status.progress} / ${status.duration}`;
 });
 socket.on("queueList", (list) => {
+  console.log(list);
   const queueParent = document.querySelector("#videoQueueDiv");
   if (list.length > 0) {
     showQueue(true);

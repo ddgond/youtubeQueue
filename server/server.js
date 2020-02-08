@@ -32,7 +32,7 @@ ytSearch = (searchTerm) => { // Returns a Promise
 }
 
 sortRoom = (roomCode) => {
-  rooms[roomCode].sort((a, b) => {
+  rooms[roomCode].entries.sort((a, b) => {
     if (a.votes.length - a.downVotes.length > b.votes.length - b.downVotes.length) {
       return -1;
     }
@@ -58,13 +58,31 @@ io.on('connection', function(socket) {
     console.log(`a user joined room ${roomCode}`);
     connectedRoom = roomCode;
     if (!rooms[connectedRoom]) {
-      rooms[connectedRoom] = [];
+      rooms[connectedRoom] = {entries: [], state: {}, users: [{id: socket.id, ip: socket.handshake.address}]};
     }
-    socket.emit("queueList", rooms[connectedRoom]);
+    if (rooms[connectedRoom].users.filter((user) => user.ip === socket.handshake.address && user.id != socket.id).length > 0) {
+      rooms[connectedRoom].users = rooms[connectedRoom].users.map((user) => {
+        if (user.ip === socket.handshake.address) {
+          rooms[connectedRoom].entries = rooms[connectedRoom].entries.map(entry => {
+            entry.votes = entry.votes.map(voter => {
+              if (voter === user.id) {
+                return socket.id; // Update votes to reflect connection from different socket
+              }
+              return voter;
+            });
+            return entry;
+          });
+          user.id = socket.id; // Update user to reflect connection from different socket
+        }
+        return user;
+      });
+    }
+    socket.emit("statusUpdate", rooms[connectedRoom].state);
+    socket.emit("queueList", rooms[connectedRoom].entries);
   });
 
   socket.on('leaveRoom', function() {
-    if (connectedRoom) {
+    if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
       socket.leave(connectedRoom);
       console.log(`a user left room ${connectedRoom}`);
       connectedRoom = null;
@@ -73,8 +91,8 @@ io.on('connection', function(socket) {
 
   socket.on('getNextSong', function() {
     if (connectedRoom) {
-      if (rooms[connectedRoom].length > 0) {
-        io.to(connectedRoom).emit("playNextSong", `https://www.youtube.com/watch?v=${rooms[connectedRoom].shift().video.id.videoId}`);
+      if (rooms[connectedRoom].entries.length > 0) {
+        io.to(connectedRoom).emit("playNextSong", `https://www.youtube.com/watch?v=${rooms[connectedRoom].entries.shift().video.id.videoId}`);
       } else {
         io.to(connectedRoom).emit("playNextSong", "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
       }
@@ -83,8 +101,9 @@ io.on('connection', function(socket) {
 
   socket.on('statusUpdate', function(status) {
     if (connectedRoom) {
-      io.to(connectedRoom).emit("statusUpdate", status);
-      io.to(connectedRoom).emit("queueList", rooms[connectedRoom]);
+      rooms[connectedRoom].state = status;
+      io.to(connectedRoom).emit("statusUpdate", rooms[connectedRoom].state);
+      io.to(connectedRoom).emit("queueList", rooms[connectedRoom].entries);
     }
   });
 
@@ -117,51 +136,51 @@ io.on('connection', function(socket) {
   });
 
   socket.on('addToQueue', (video) => {
-    if (connectedRoom) {
-      if (rooms[connectedRoom].filter((entry) => entry.video.id.videoId === video.id.videoId).length > 0) {
+    if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
+      if (rooms[connectedRoom].entries.filter((entry) => entry.video.id.videoId === video.id.videoId).length > 0) {
         return;
       }
-      rooms[connectedRoom].push({video: video, votes: [socket.id], downVotes: [], time: Date.now()});
-      io.to(connectedRoom).emit("queueList", rooms[connectedRoom]);
+      rooms[connectedRoom].entries.push({video: video, votes: [socket.id], downVotes: [], time: Date.now()});
+      io.to(connectedRoom).emit("queueList", rooms[connectedRoom].entries);
     }
   });
 
   socket.on('vote', (data) => {
-    if (connectedRoom) {
+    if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
       console.log(data);
       if (data.video.id.videoId) {
-        if (rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0].votes.includes(socket.id)) {
+        if (rooms[connectedRoom].entries.filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0].votes.includes(socket.id)) {
           return;
         }
-        const vid = rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0]
+        const vid = rooms[connectedRoom].entries.filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0];
         vid.votes.push(socket.id);
         vid.downVotes = vid.downVotes.filter((id) => id != socket.id);
         sortRoom(connectedRoom);
-        io.to(connectedRoom).emit("queueList", rooms[connectedRoom]);
+        io.to(connectedRoom).emit("queueList", rooms[connectedRoom].entries);
       }
     }
   });
 
   socket.on('downvote', (data) => {
-    if (connectedRoom) {
+    if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
       console.log(data);
       if (data.video.id.videoId) {
-        if (rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0].downVotes.includes(socket.id)) {
+        if (rooms[connectedRoom].entries.filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0].downVotes.includes(socket.id)) {
           return;
         }
-        const vid = rooms[connectedRoom].filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0]
+        const vid = rooms[connectedRoom].entries.filter((entry) => entry.video.id.videoId === data.video.id.videoId)[0];
         vid.downVotes.push(socket.id);
         vid.votes = vid.votes.filter((id) => id != socket.id);
         sortRoom(connectedRoom);
-        io.to(connectedRoom).emit("queueList", rooms[connectedRoom]);
+        io.to(connectedRoom).emit("queueList", rooms[connectedRoom].entries);
       }
     }
   });
 
   socket.on('unvote', (data) => {
-    if (connectedRoom) {
+    if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
       if (data.video.id.videoId) {
-        rooms[connectedRoom] = rooms[connectedRoom].map((entry) => {
+        rooms[connectedRoom].entries = rooms[connectedRoom].entries.map((entry) => {
           if (entry.video.id.videoId === data.video.id.videoId) {
             entry.votes = entry.votes.filter((id) => {
               return id != socket.id;
@@ -173,7 +192,27 @@ io.on('connection', function(socket) {
           return entry;
         });
         sortRoom(connectedRoom);
-        io.to(connectedRoom).emit("queueList", rooms[connectedRoom]);
+        io.to(connectedRoom).emit("queueList", rooms[connectedRoom].entries);
+      }
+    }
+  });
+
+  socket.on('voteSkip', () => {
+    if (connectedRoom && rooms[connectedRoom].users.filter(user=>user.id===socket.id).length > 0) {
+      if (data.video.id.videoId) {
+        rooms[connectedRoom].entries = rooms[connectedRoom].entries.map((entry) => {
+          if (entry.video.id.videoId === data.video.id.videoId) {
+            entry.votes = entry.votes.filter((id) => {
+              return id != socket.id;
+            });
+            entry.downVotes = entry.downVotes.filter((id) => {
+              return id != socket.id;
+            });
+          }
+          return entry;
+        });
+        sortRoom(connectedRoom);
+        io.to(connectedRoom).emit("queueList", rooms[connectedRoom].entries);
       }
     }
   });
