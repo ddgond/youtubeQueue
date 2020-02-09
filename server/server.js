@@ -13,7 +13,6 @@ app.get('/', (req, res) => {
 
 app.get('/whoami', (req, res) => {
   res.send({ip: req.header('X-Real-IP')});
-  console.log(req.header('X-Real-IP'));
 });
 
 app.get('/socket.io/socket.io.js', (req, res) => {
@@ -116,13 +115,11 @@ io.on('connection', function(socket) {
     console.log(`a user joined room ${roomCode}`);
     connectedRoom = roomCode;
     if (!rooms[connectedRoom]) {
-      rooms[connectedRoom] = {entries: [], state: {}, users: [{id: socket.id, ip: socket.handshake.address}], skipVotes: []};
+      rooms[connectedRoom] = {entries: [], state: {}, users: [{id: socket.id, ip: ip}], skipVotes: []};
     }
-    console.log("user ip");
-    console.log(ip);
-    if (rooms[connectedRoom].users.filter((user) => user.ip === socket.handshake.address).length > 0) {
+    if (rooms[connectedRoom].users.filter((user) => user.ip === ip).length > 0) {
       rooms[connectedRoom].users = rooms[connectedRoom].users.map((user) => {
-        if (user.ip === socket.handshake.address) {
+        if (user.ip === ip) {
           rooms[connectedRoom].entries = rooms[connectedRoom].entries.map(entry => {
             entry.votes = entry.votes.map(voter => {
               if (voter === user.id) {
@@ -143,7 +140,7 @@ io.on('connection', function(socket) {
         return user;
       });
     } else {
-      rooms[connectedRoom].users.push({id: socket.id, ip: socket.handshake.address});
+      rooms[connectedRoom].users.push({id: socket.id, ip: ip});
     }
     socket.emit("statusUpdate", rooms[connectedRoom].state);
     socket.emit("queueList", rooms[connectedRoom].entries);
