@@ -88,7 +88,7 @@ chrome.runtime.onConnect.addListener(port => {
   port.onMessage.addListener(msg => {
     if (port.name === "toServer") {
       if (msg.roomCode) {
-        socket.emit("joinRoom", msg.roomCode);
+        socket.emit("joinRoom", {roomCode: msg.roomCode});
       }
       if (msg.leaveRoom) {
         socket.emit("leaveRoom");
