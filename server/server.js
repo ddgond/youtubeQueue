@@ -4,16 +4,7 @@ const app = express();
 const port = 3000;
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
-const { YoutubeDataAPI } = require("youtube-v3-api");
-const youtube = "aizasycf6oxv4fm65fvcfkpsxt7hzc0jjywu7jw"; // slightly obscured to prevent scraping of key, yes this is terrible practice
-const l = [0,1,4,6,7,9,10,11,14,18,21,22,24,31,33,34,35,37];
-const ytKey = youtube.split("").map((char, index) => {
-  if (l.includes(index)) {
-    return char.toUpperCase();
-  }
-  return char;
-}).join("");
-const ytApi = new YoutubeDataAPI(ytKey);
+const scrapeSearch = require('scrape-youtube');
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
@@ -28,13 +19,28 @@ app.use(express.static('public'));
 rooms = {};
 
 ytSearch = (searchTerm) => { // Returns a Promise
-  return new Promise((resolve, reject) => {
-    ytApi.searchAll(searchTerm, 5, {type: "video"}).then((data) => {
-      resolve(data.items);
-    }, (err) => {
-      reject(new Error('Failed to get video data.'));
+  const promise = new Promise((resolve, reject) => {
+    scrapeSearch(searchTerm, {
+      limit: 5,
+      type: "video"
+    }).then((results) => {
+      results = results.map(result => {
+        return {
+          id: {videoId: result.link.slice(-11)},
+          snippet: {
+            title:result.title,
+            description:result.description,
+            thumbnails:{medium:{url:result.thumbnail}},
+            channelTitle:result.channel,
+            duration: result.duration,
+            views: result.views
+          }
+        }
+      });
+      resolve(results);
     });
   });
+  return promise;
 }
 
 sortRoom = (roomCode) => {
@@ -160,7 +166,7 @@ io.on('connection', function(socket) {
             id:{videoId:'dQw4w9WgXcQ'},
             snippet:{
               title:'Never Gonna Give You Up',
-              description:'Youtube API broke. Oops.',
+              description:'Youtube scraping broke. Oops.',
               thumbnails:{medium:{url:"https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg?sqp=-oaymwEZCNACELwBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCALyvNJwgrtG1GpHFugkV0e3jqdg"}},
               channelTitle:"Official Rick Astley"
             }
@@ -189,7 +195,7 @@ io.on('connection', function(socket) {
           id:{videoId:'dQw4w9WgXcQ'},
           snippet:{
             title:'Never Gonna Give You Up',
-            description:'Youtube API broke. Oops.',
+            description:'Youtube scraping broke. Oops.',
             thumbnails:{medium:{url:"https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg?sqp=-oaymwEZCNACELwBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCALyvNJwgrtG1GpHFugkV0e3jqdg"}},
             channelTitle:"Official Rick Astley"
           }
