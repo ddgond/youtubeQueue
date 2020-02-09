@@ -107,6 +107,19 @@ io.on('connection', function(socket) {
   socket.on('joinRoom', function(data) {
     const roomCode = data.roomCode;
     const ip = data.ip;
+    if (!ip) {
+      // If hosting
+      if (connectedRoom) {
+        socket.leave(connectedRoom);
+        console.log(`a host left room ${connectedRoom}`);
+      }
+      socket.join(roomCode);
+      console.log(`a user joined room ${roomCode}`);
+      connectedRoom = roomCode;
+      rooms[connectedRoom] = {entries: [], state: {}, users: [], skipVotes: []};
+      socket.emit("queueList", rooms[connectedRoom].entries);
+      return;
+    }
     if (connectedRoom) {
       socket.leave(connectedRoom);
       console.log(`a user left room ${connectedRoom}`);
