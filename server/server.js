@@ -111,7 +111,8 @@ io.on('connection', function(socket) {
     if (!rooms[connectedRoom]) {
       rooms[connectedRoom] = {entries: [], state: {}, users: [{id: socket.id, ip: socket.handshake.address}], skipVotes: []};
     }
-    if (rooms[connectedRoom].users.filter((user) => user.ip === socket.handshake.address && user.id != socket.id).length > 0) {
+    console.log(`IP: ${socket.handshake.address}`);
+    if (rooms[connectedRoom].users.filter((user) => user.ip === socket.handshake.address).length > 0) {
       rooms[connectedRoom].users = rooms[connectedRoom].users.map((user) => {
         if (user.ip === socket.handshake.address) {
           rooms[connectedRoom].entries = rooms[connectedRoom].entries.map(entry => {
@@ -134,9 +135,7 @@ io.on('connection', function(socket) {
         return user;
       });
     } else {
-      if (rooms[connectedRoom].users.filter((user) => user.ip === socket.handshake.address).length === 0) {
-        rooms[connectedRoom].users.push({id: socket.id, ip: socket.handshake.address});
-      }
+      rooms[connectedRoom].users.push({id: socket.id, ip: socket.handshake.address});
     }
     socket.emit("statusUpdate", rooms[connectedRoom].state);
     socket.emit("queueList", rooms[connectedRoom].entries);
