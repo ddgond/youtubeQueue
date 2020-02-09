@@ -1,3 +1,11 @@
+let ip;
+
+fetch('/whoami').then((response) => {
+  return response.json();
+}).then((json) => {
+  ip = json.ip;
+});
+
 const socket = io();
 socket.on("connect", () => {
   console.log('Connected to socket!');
@@ -225,7 +233,7 @@ roomCodeInput.onkeyup = (evt) => {
 }
 
 joinRoomButton.onclick = () => {
-  socket.emit("joinRoom", roomCodeInput.value);
+  socket.emit("joinRoom", {roomCode: roomCodeInput.value, ip: ip});
   updateUI(roomCodeInput.value);
   cleanUp();
 }

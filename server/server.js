@@ -11,6 +11,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+app.get('/whoami', (req, res) => {
+  res.send({ip: req.ip});
+  console.log(req.ip);
+});
+
 app.get('/socket.io/socket.io.js', (req, res) => {
   res.sendFile(path.join(__dirname, "node_modules/socket.io-client/dist/socket.io.js"));
 });
@@ -100,7 +105,9 @@ io.on('connection', function(socket) {
   console.log('a user connected');
   let connectedRoom;
 
-  socket.on('joinRoom', function(roomCode) {
+  socket.on('joinRoom', function(data) {
+    const roomCode = data.roomCode;
+    const ip = data.ip;
     if (connectedRoom) {
       socket.leave(connectedRoom);
       console.log(`a user left room ${connectedRoom}`);
@@ -109,12 +116,13 @@ io.on('connection', function(socket) {
     console.log(`a user joined room ${roomCode}`);
     connectedRoom = roomCode;
     if (!rooms[connectedRoom]) {
-      rooms[connectedRoom] = {entries: [], state: {}, users: [{id: socket.id, ip: socket.handshake.headers["x-forwarded-for"].split(",")[0]}], skipVotes: []};
+      rooms[connectedRoom] = {entries: [], state: {}, users: [{id: socket.id, ip: socket.handshake.address}], skipVotes: []};
     }
-    console.log(`IP: ${socket.handshake.headers["x-forwarded-for"].split(",")[0]}`);
-    if (rooms[connectedRoom].users.filter((user) => user.ip === socket.handshake.headers["x-forwarded-for"].split(",")[0]).length > 0) {
+    console.log("user ip");
+    console.log(ip);
+    if (rooms[connectedRoom].users.filter((user) => user.ip === socket.handshake.address).length > 0) {
       rooms[connectedRoom].users = rooms[connectedRoom].users.map((user) => {
-        if (user.ip === socket.handshake.headers["x-forwarded-for"].split(",")[0]) {
+        if (user.ip === socket.handshake.address) {
           rooms[connectedRoom].entries = rooms[connectedRoom].entries.map(entry => {
             entry.votes = entry.votes.map(voter => {
               if (voter === user.id) {
@@ -135,7 +143,7 @@ io.on('connection', function(socket) {
         return user;
       });
     } else {
-      rooms[connectedRoom].users.push({id: socket.id, ip: socket.handshake.headers["x-forwarded-for"].split(",")[0]});
+      rooms[connectedRoom].users.push({id: socket.id, ip: socket.handshake.address});
     }
     socket.emit("statusUpdate", rooms[connectedRoom].state);
     socket.emit("queueList", rooms[connectedRoom].entries);
