@@ -109,12 +109,12 @@ io.on('connection', function(socket) {
     console.log(`a user joined room ${roomCode}`);
     connectedRoom = roomCode;
     if (!rooms[connectedRoom]) {
-      rooms[connectedRoom] = {entries: [], state: {}, users: [{id: socket.id, ip: socket.handshake.address}], skipVotes: []};
+      rooms[connectedRoom] = {entries: [], state: {}, users: [{id: socket.id, ip: socket.request.connection.remoteAddress}], skipVotes: []};
     }
-    console.log(`IP: ${socket.handshake.address}`);
-    if (rooms[connectedRoom].users.filter((user) => user.ip === socket.handshake.address).length > 0) {
+    console.log(`IP: ${socket.request.connection.remoteAddress}`);
+    if (rooms[connectedRoom].users.filter((user) => user.ip === socket.request.connection.remoteAddress).length > 0) {
       rooms[connectedRoom].users = rooms[connectedRoom].users.map((user) => {
-        if (user.ip === socket.handshake.address) {
+        if (user.ip === socket.request.connection.remoteAddress) {
           rooms[connectedRoom].entries = rooms[connectedRoom].entries.map(entry => {
             entry.votes = entry.votes.map(voter => {
               if (voter === user.id) {
@@ -135,7 +135,7 @@ io.on('connection', function(socket) {
         return user;
       });
     } else {
-      rooms[connectedRoom].users.push({id: socket.id, ip: socket.handshake.address});
+      rooms[connectedRoom].users.push({id: socket.id, ip: socket.request.connection.remoteAddress});
     }
     socket.emit("statusUpdate", rooms[connectedRoom].state);
     socket.emit("queueList", rooms[connectedRoom].entries);
