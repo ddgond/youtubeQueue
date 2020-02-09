@@ -144,7 +144,7 @@ io.on('connection', function(socket) {
     }
     socket.emit("statusUpdate", rooms[connectedRoom].state);
     socket.emit("queueList", rooms[connectedRoom].entries);
-    socket.emit("skipStatus", getSkipStatus(connectedRoom));
+    io.to(connectedRoom).emit("skipStatus", getSkipStatus(connectedRoom));
   });
 
   socket.on('leaveRoom', function() {
