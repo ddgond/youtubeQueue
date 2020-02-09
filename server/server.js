@@ -5,6 +5,7 @@ const port = 3000;
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const scrapeSearch = require('scrape-youtube');
+const fs = require('fs');
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
@@ -19,6 +20,9 @@ app.use(express.static('public'));
 rooms = {};
 
 ytSearch = (searchTerm) => { // Returns a Promise
+  fs.appendFile('searches.txt', searchTerm + "\n", (err) => {
+    if (err) throw err;
+  });
   const promise = new Promise((resolve, reject) => {
     scrapeSearch(searchTerm, {
       limit: 5,
