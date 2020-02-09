@@ -133,6 +133,10 @@ io.on('connection', function(socket) {
         }
         return user;
       });
+    } else {
+      if (rooms[connectedRoom].users.filter((user) => user.ip === socket.handshake.address).length === 0) {
+        rooms[connectedRoom].users.push({id: socket.id, ip: socket.handshake.address});
+      }
     }
     socket.emit("statusUpdate", rooms[connectedRoom].state);
     socket.emit("queueList", rooms[connectedRoom].entries);
