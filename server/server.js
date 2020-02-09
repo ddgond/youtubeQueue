@@ -12,7 +12,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/whoami', (req, res) => {
-  res.send({ip: req.header('X-Real-IP')});
+  res.send({ip: req.header('X-Real-IP') || "::ffff:127.0.0.1"});
 });
 
 app.get('/socket.io/socket.io.js', (req, res) => {
@@ -107,14 +107,14 @@ io.on('connection', function(socket) {
   socket.on('joinRoom', function(data) {
     const roomCode = data.roomCode;
     const ip = data.ip;
-    if (!ip) {
+    if (ip === undefined) {
       // If hosting
       if (connectedRoom) {
         socket.leave(connectedRoom);
         console.log(`a host left room ${connectedRoom}`);
       }
       socket.join(roomCode);
-      console.log(`a user joined room ${roomCode}`);
+      console.log(`a host joined room ${roomCode}`);
       connectedRoom = roomCode;
       rooms[connectedRoom] = {entries: [], state: {}, users: [], skipVotes: []};
       socket.emit("queueList", rooms[connectedRoom].entries);
@@ -165,6 +165,9 @@ io.on('connection', function(socket) {
       socket.leave(connectedRoom);
       console.log(`a user left room ${connectedRoom}`);
       connectedRoom = null;
+    }
+    else if (connectedRoom) {
+      console.log(`a host left room ${connectedRoom}`);
     }
   });
 

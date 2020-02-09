@@ -1,7 +1,7 @@
 {
   "name": "YouTube Queue",
   "short_name": "YT Queue",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Queue videos from multiple computers to a single computer!",
   "author": "Daniel Dangond",
   "permissions": ["storage", "declarativeContent", "activeTab", "tabs"],
