@@ -12,8 +12,8 @@ app.get('/', (req, res) => {
 });
 
 app.get('/whoami', (req, res) => {
-  res.send({ip: req.ip});
-  console.log(req.ip);
+  res.send({ip: req.header('X-Real-IP')});
+  console.log(req.header('X-Real-IP'));
 });
 
 app.get('/socket.io/socket.io.js', (req, res) => {
